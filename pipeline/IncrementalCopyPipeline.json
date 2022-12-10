@@ -29,7 +29,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "select * from watermarktable where TableName  =  '@{item().TABLE_NAME}'",
+										"value": "select * from watermarktable where TableName = '@{item().TABLE_NAME}'\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -98,7 +98,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "select * from @{item().TABLE_NAME} where @{item().WaterMark_Column} > '@{activity('LookupOldWaterMarkActivity').output.firstRow.WatermarkValue}' and @{item().WaterMark_Column} <= '@{activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue}'",
+										"value": "select * from @{item().TABLE_NAME} where @{item().WaterMark_Column} > '@{activity('LookupOldWaterMarkActivity').output.firstRow.WatermarkValue}' and @{item().WaterMark_Column} <= '@{activity('LookupNewWaterMarkActivity').output.firstRow.NewWatermarkvalue}'\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
