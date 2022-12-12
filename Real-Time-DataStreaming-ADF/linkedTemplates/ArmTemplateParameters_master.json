@@ -5,10 +5,10 @@
 		"factoryName": {
 			"value": "Real-Time-DataStreaming-ADF"
 		},
-		"AzureSqlDatabaseLinkedService_connectionString": {
+		"IncrementallyAzureSqlDatabaseDestination_connectionString": {
 			"value": ""
 		},
-		"SqlServerLinkedService_connectionString": {
+		"IncrementallyAzureSqlDatabaseSource_connectionString": {
 			"value": ""
 		},
 		"containerUri": {
