@@ -135,6 +135,94 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Employees')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "IncrementallyAzureSqlDatabaseSource",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Emp_Id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Emp_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Gender",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employees"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseSource')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tbl_employee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "IncrementallyAzureSqlDatabaseDestination",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Surrogate_key",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Emp_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Emp_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Gender",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "isActive",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "tbl_employee"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseDestination')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/IncrementalCopyPipeline')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -350,6 +438,180 @@
 				"[concat(variables('factoryId'), '/datasets/SourceDataset')]",
 				"[concat(variables('factoryId'), '/datasets/SinkDataset')]",
 				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseDestination')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SlowlyChangingDimensionType2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Employees",
+								"type": "DatasetReference"
+							},
+							"name": "EmployeeDbSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "tbl_employee",
+								"type": "DatasetReference"
+							},
+							"name": "EmployeeDbDestination"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "tbl_employee",
+								"type": "DatasetReference"
+							},
+							"name": "sinkDataSet"
+						},
+						{
+							"dataset": {
+								"referenceName": "tbl_employee",
+								"type": "DatasetReference"
+							},
+							"name": "SinkDataSet2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "addisActive"
+						},
+						{
+							"name": "RenameColumn"
+						},
+						{
+							"name": "lookupActivity"
+						},
+						{
+							"name": "ExitingRows"
+						},
+						{
+							"name": "DropColumn"
+						},
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Emp_Id as integer,",
+						"          Emp_Name as string,",
+						"          Gender as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> EmployeeDbSource",
+						"source(output(",
+						"          Surrogate_key as integer,",
+						"          Emp_id as integer,",
+						"          Emp_Name as string,",
+						"          Gender as string,",
+						"          Country as string,",
+						"          isActive as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> EmployeeDbDestination",
+						"EmployeeDbSource derive(isActive = 1) ~> addisActive",
+						"EmployeeDbDestination select(mapColumn(",
+						"          SQL_Surrogate_key = Surrogate_key,",
+						"          SQL_Emp_id = Emp_id,",
+						"          SQL_Emp_Name = Emp_Name,",
+						"          SQL_Gender = Gender,",
+						"          SQL_Country = Country,",
+						"          SQL_isActive = isActive",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumn",
+						"EmployeeDbSource, RenameColumn lookup(Emp_Id == SQL_Emp_id,",
+						"     multiple: true,",
+						"     broadcast: 'auto')~> lookupActivity",
+						"lookupActivity filter(!isNull(SQL_Emp_id)) ~> ExitingRows",
+						"ExitingRows select(mapColumn(",
+						"          SQL_Surrogate_key,",
+						"          SQL_Emp_id,",
+						"          SQL_Emp_Name,",
+						"          SQL_Gender,",
+						"          SQL_Country,",
+						"          SQL_isActive",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropColumn",
+						"DropColumn derive(SQL_isActive = 0) ~> derivedColumn1",
+						"derivedColumn1 alterRow(updateIf(1==1)) ~> alterRow1",
+						"addisActive sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Surrogate_key as integer,",
+						"          Emp_id as integer,",
+						"          Emp_Name as string,",
+						"          Gender as string,",
+						"          Country as string,",
+						"          isActive as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 2,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Emp_id = Emp_Id,",
+						"          Emp_Name,",
+						"          Gender,",
+						"          Country,",
+						"          isActive",
+						"     )) ~> sinkDataSet",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Surrogate_key as integer,",
+						"          Emp_id as integer,",
+						"          Emp_Name as string,",
+						"          Gender as string,",
+						"          Country as string,",
+						"          isActive as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['Surrogate_key'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Surrogate_key = SQL_Surrogate_key,",
+						"          Emp_id = SQL_Emp_id,",
+						"          Emp_Name = SQL_Emp_Name,",
+						"          Gender = SQL_Gender,",
+						"          Country = SQL_Country,",
+						"          isActive = SQL_isActive",
+						"     )) ~> SinkDataSet2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Employees')]",
+				"[concat(variables('factoryId'), '/datasets/tbl_employee')]"
 			]
 		}
 	]
