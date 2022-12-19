@@ -32,7 +32,7 @@
 						"referenceName": "tbl_employee",
 						"type": "DatasetReference"
 					},
-					"name": "SinkDataSet2"
+					"name": "sink1"
 				}
 			],
 			"transformations": [
@@ -125,7 +125,7 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     saveOrder: 2,",
+				"     saveOrder: 1,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
 				"          Emp_id = Emp_Id,",
@@ -152,7 +152,6 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     saveOrder: 1,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
 				"          Surrogate_key = SQL_Surrogate_key,",
@@ -161,7 +160,7 @@
 				"          Gender = SQL_Gender,",
 				"          Country = SQL_Country,",
 				"          isActive = SQL_isActive",
-				"     )) ~> SinkDataSet2"
+				"     )) ~> sink1"
 			]
 		}
 	}
