@@ -107,7 +107,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> DropColumn",
 				"DropColumn derive(SQL_isActive = 0) ~> derivedColumn1",
-				"derivedColumn1 alterRow(updateIf(1==1)) ~> alterRow1",
+				"derivedColumn1 alterRow(updateIf(1 ==1)) ~> alterRow1",
 				"addisActive sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
