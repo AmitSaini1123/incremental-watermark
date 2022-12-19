@@ -1,0 +1,44 @@
+{
+	"name": "tbl_employee",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "IncrementallyAzureSqlDatabaseDestination",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Surrogate_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Emp_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Emp_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Gender",
+				"type": "varchar"
+			},
+			{
+				"name": "Country",
+				"type": "nvarchar"
+			},
+			{
+				"name": "isActive",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "tbl_employee"
+		}
+	}
+}
