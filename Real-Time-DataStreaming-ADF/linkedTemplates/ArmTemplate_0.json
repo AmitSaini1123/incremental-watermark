@@ -476,7 +476,7 @@
 								"referenceName": "tbl_employee",
 								"type": "DatasetReference"
 							},
-							"name": "SinkDataSet2"
+							"name": "sink1"
 						}
 					],
 					"transformations": [
@@ -551,7 +551,7 @@
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> DropColumn",
 						"DropColumn derive(SQL_isActive = 0) ~> derivedColumn1",
-						"derivedColumn1 alterRow(updateIf(1==1)) ~> alterRow1",
+						"derivedColumn1 alterRow(updateIf(1 ==1)) ~> alterRow1",
 						"addisActive sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
@@ -569,7 +569,7 @@
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     saveOrder: 2,",
+						"     saveOrder: 1,",
 						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
 						"          Emp_id = Emp_Id,",
@@ -596,7 +596,6 @@
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     saveOrder: 1,",
 						"     errorHandlingOption: 'stopOnFirstError',",
 						"     mapColumn(",
 						"          Surrogate_key = SQL_Surrogate_key,",
@@ -605,7 +604,7 @@
 						"          Gender = SQL_Gender,",
 						"          Country = SQL_Country,",
 						"          isActive = SQL_isActive",
-						"     )) ~> SinkDataSet2"
+						"     )) ~> sink1"
 					]
 				}
 			},
@@ -641,7 +640,7 @@
 									"EmployeeDbSource": {},
 									"EmployeeDbDestination": {},
 									"sinkDataSet": {},
-									"SinkDataSet2": {}
+									"sink1": {}
 								}
 							},
 							"staging": {},
