@@ -1,0 +1,48 @@
+{
+	"name": "Employee_Records_destination",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "IncrementallyAzureSqlDatabaseDestination",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Emp_SID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Emp_No",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Emp_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Department",
+				"type": "varchar"
+			},
+			{
+				"name": "City",
+				"type": "varchar"
+			},
+			{
+				"name": "LastUpdated_Date",
+				"type": "date"
+			},
+			{
+				"name": "is_Active",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Employee_Records_destination"
+		}
+	}
+}
