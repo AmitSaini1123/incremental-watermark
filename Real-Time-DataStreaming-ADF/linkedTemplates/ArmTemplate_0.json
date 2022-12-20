@@ -57,6 +57,141 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/EmployeeSourceTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "IncrementallyAzureSqlDatabaseSource",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Emp_Id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Emp_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Gender",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employees"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseSource')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Employee_Records')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "IncrementallyAzureSqlDatabaseSource",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "EmpNo",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "EmpName",
+						"type": "varchar"
+					},
+					{
+						"name": "Department",
+						"type": "varchar"
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "Lastmodified_Date",
+						"type": "date"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employee_Records"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseSource')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Employee_Records_destination')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "IncrementallyAzureSqlDatabaseDestination",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Emp_SID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Emp_No",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Emp_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Department",
+						"type": "varchar"
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "LastUpdated_Date",
+						"type": "date"
+					},
+					{
+						"name": "is_Active",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employee_Records_destination"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseDestination')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/SinkDataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -132,45 +267,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseDestination')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/EmployeeSourceTable')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "IncrementallyAzureSqlDatabaseSource",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Emp_Id",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "Emp_Name",
-						"type": "varchar"
-					},
-					{
-						"name": "Gender",
-						"type": "varchar"
-					},
-					{
-						"name": "Country",
-						"type": "varchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "Employees"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseSource')]"
 			]
 		},
 		{
@@ -551,7 +647,7 @@
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> select2",
 						"select2 derive(SQL_isActive = 0) ~> derivedColumn2",
-						"derivedColumn2 alterRow(updateIf(1 == 1)) ~> alterRow1",
+						"derivedColumn2 alterRow(updateIf(1==1)) ~> alterRow1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
@@ -570,7 +666,14 @@
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     saveOrder: 2,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Emp_id = Emp_Id,",
+						"          Emp_Name,",
+						"          Gender,",
+						"          Country,",
+						"          isActive",
+						"     )) ~> sink1",
 						"alterRow1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
@@ -605,6 +708,158 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/EmployeeSourceTable')]",
 				"[concat(variables('factoryId'), '/datasets/tbl_employee')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Employee_Records",
+								"type": "DatasetReference"
+							},
+							"name": "sourceDb"
+						},
+						{
+							"dataset": {
+								"referenceName": "Employee_Records_destination",
+								"type": "DatasetReference"
+							},
+							"name": "DistinationDb"
+						},
+						{
+							"dataset": {
+								"referenceName": "Employee_Records_destination",
+								"type": "DatasetReference"
+							},
+							"name": "MaxKey"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Employee_Records_destination",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "join1"
+						},
+						{
+							"name": "lookup1"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpNo as integer,",
+						"          EmpName as string,",
+						"          Department as string,",
+						"          City as string,",
+						"          Lastmodified_Date as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourceDb",
+						"source(output(",
+						"          Emp_SID as integer,",
+						"          Emp_No as integer,",
+						"          Emp_Name as string,",
+						"          Department as string,",
+						"          City as string,",
+						"          LastUpdated_Date as date,",
+						"          is_Active as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DistinationDb",
+						"source(output(",
+						"          Emp_SID as integer,",
+						"          Emp_No as integer,",
+						"          Emp_Name as string,",
+						"          Department as string,",
+						"          City as string,",
+						"          LastUpdated_Date as date,",
+						"          is_Active as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     query: 'select Max([Emp_SID]) as MaxKey From [dbo].[Employee_Records_destination]',",
+						"     format: 'query') ~> MaxKey",
+						"DistinationDb select(mapColumn(",
+						"          DimEmp_SID = Emp_SID,",
+						"          DimEmp_No = Emp_No,",
+						"          DimEmp_Name = Emp_Name,",
+						"          DimDepartment = Department,",
+						"          DimCity = City,",
+						"          DimLastUpdated_Date = LastUpdated_Date,",
+						"          Dimis_Active = is_Active",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"sourceDb, MaxKey join(1 == 1,",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1, select1 lookup(EmpNo == DimEmp_No,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> lookup1",
+						"lookup1 split(isNull(DimEmp_No),",
+						"     disjoint: false) ~> split1@(New, Exist)",
+						"split1@New derive(isactiveinsert = 1) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Emp_SID as integer,",
+						"          Emp_No as integer,",
+						"          Emp_Name as string,",
+						"          Department as string,",
+						"          City as string,",
+						"          LastUpdated_Date as date,",
+						"          is_Active as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Emp_SID,",
+						"          Emp_No,",
+						"          Emp_Name,",
+						"          LastUpdated_Date,",
+						"          is_Active",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Employee_Records')]",
+				"[concat(variables('factoryId'), '/datasets/Employee_Records_destination')]"
 			]
 		},
 		{
