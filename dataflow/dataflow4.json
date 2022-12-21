@@ -241,9 +241,6 @@
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
 				"          Emp_id = SRC_Emp_Id,",
-				"          Emp_Name = SRC_Emp_Name,",
-				"          Gender = SRC_Gender,",
-				"          Country = SRC_Country,",
 				"          isActive",
 				"     )) ~> sink4"
 			]
