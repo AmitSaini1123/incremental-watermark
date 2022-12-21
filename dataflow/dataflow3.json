@@ -168,7 +168,6 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          Surrogate_key,",
 				"          ID,",
 				"          First_Name,",
 				"          Last_Name,",
