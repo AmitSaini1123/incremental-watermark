@@ -80,7 +80,6 @@
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> SourceTable",
 				"source(output(",
-				"          Surrogate_key as integer,",
 				"          ID as integer,",
 				"          First_Name as string,",
 				"          Last_Name as string,",
