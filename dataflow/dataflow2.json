@@ -6,14 +6,14 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "Employee_Records",
+						"referenceName": "EmployeeSourceTable",
 						"type": "DatasetReference"
 					},
 					"name": "sourceDb"
 				},
 				{
 					"dataset": {
-						"referenceName": "Employee_Records_destination",
+						"referenceName": "tbl_employee",
 						"type": "DatasetReference"
 					},
 					"name": "DistinationDb"
@@ -26,52 +26,26 @@
 					"name": "MaxKey"
 				}
 			],
-			"sinks": [
-				{
-					"dataset": {
-						"referenceName": "Employee_Records_destination",
-						"type": "DatasetReference"
-					},
-					"name": "sink1"
-				}
-			],
-			"transformations": [
-				{
-					"name": "select1"
-				},
-				{
-					"name": "join1"
-				},
-				{
-					"name": "lookup1"
-				},
-				{
-					"name": "split1"
-				},
-				{
-					"name": "derivedColumn1"
-				}
-			],
+			"sinks": [],
+			"transformations": [],
 			"scriptLines": [
 				"source(output(",
-				"          EmpNo as integer,",
-				"          EmpName as string,",
-				"          Department as string,",
-				"          City as string,",
-				"          Lastmodified_Date as date",
+				"          Emp_Id as integer,",
+				"          Emp_Name as string,",
+				"          Gender as string,",
+				"          Country as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> sourceDb",
 				"source(output(",
-				"          Emp_SID as integer,",
-				"          Emp_No as integer,",
+				"          Surrogate_key as integer,",
+				"          Emp_id as integer,",
 				"          Emp_Name as string,",
-				"          Department as string,",
-				"          City as string,",
-				"          LastUpdated_Date as date,",
-				"          is_Active as integer",
+				"          Gender as string,",
+				"          Country as string,",
+				"          isActive as integer",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -90,56 +64,7 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     query: 'select Max([Emp_SID]) as MaxKey From [dbo].[Employee_Records_destination]',",
-				"     format: 'query') ~> MaxKey",
-				"DistinationDb select(mapColumn(",
-				"          DimEmp_SID = Emp_SID,",
-				"          DimEmp_No = Emp_No,",
-				"          DimEmp_Name = Emp_Name,",
-				"          DimDepartment = Department,",
-				"          DimCity = City,",
-				"          DimLastUpdated_Date = LastUpdated_Date,",
-				"          Dimis_Active = is_Active",
-				"     ),",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1",
-				"sourceDb, MaxKey join(1 == 1,",
-				"     joinType:'cross',",
-				"     matchType:'exact',",
-				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> join1",
-				"join1, select1 lookup(EmpNo == DimEmp_No,",
-				"     multiple: false,",
-				"     pickup: 'any',",
-				"     broadcast: 'auto')~> lookup1",
-				"lookup1 split(isNull(DimEmp_No),",
-				"     disjoint: false) ~> split1@(New, Exist)",
-				"split1@New derive(isactiveinsert = 1) ~> derivedColumn1",
-				"derivedColumn1 sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     input(",
-				"          Emp_SID as integer,",
-				"          Emp_No as integer,",
-				"          Emp_Name as string,",
-				"          Department as string,",
-				"          City as string,",
-				"          LastUpdated_Date as date,",
-				"          is_Active as integer",
-				"     ),",
-				"     deletable:false,",
-				"     insertable:true,",
-				"     updateable:false,",
-				"     upsertable:false,",
-				"     format: 'table',",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
-				"     mapColumn(",
-				"          Emp_SID,",
-				"          Emp_No,",
-				"          Emp_Name,",
-				"          LastUpdated_Date,",
-				"          is_Active",
-				"     )) ~> sink1"
+				"     format: 'query') ~> MaxKey"
 			]
 		}
 	}
