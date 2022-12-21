@@ -20,14 +20,21 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "Employee_Records_destination",
+						"referenceName": "tbl_employee",
 						"type": "DatasetReference"
 					},
 					"name": "MaxKey"
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "select1"
+				},
+				{
+					"name": "join1"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          Emp_Id as integer,",
@@ -51,20 +58,24 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> DistinationDb",
-				"source(output(",
-				"          Emp_SID as integer,",
-				"          Emp_No as integer,",
-				"          Emp_Name as string,",
-				"          Department as string,",
-				"          City as string,",
-				"          LastUpdated_Date as date,",
-				"          is_Active as integer",
-				"     ),",
-				"     allowSchemaDrift: true,",
+				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     query: 'select Max([Emp_SID]) as MaxKey From [dbo].[Employee_Records_destination]',",
-				"     format: 'query') ~> MaxKey"
+				"     query: 'select Max(Surrogate_key) as MaxKey From tbl_employee',",
+				"     format: 'query') ~> MaxKey",
+				"sourceDb select(mapColumn(",
+				"          Src_Emp_Id = Emp_Id,",
+				"          Src_Emp_Name = Emp_Name,",
+				"          Src_Gender = Gender,",
+				"          Src_Country = Country",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 join(ERROR_FUNCTION('') == ERROR_FUNCTION(''),",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1"
 			]
 		}
 	}
