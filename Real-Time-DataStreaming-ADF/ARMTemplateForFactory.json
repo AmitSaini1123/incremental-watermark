@@ -910,6 +910,295 @@
 				"[concat(variables('factoryId'), '/datasets/Employee_Records')]",
 				"[concat(variables('factoryId'), '/datasets/Employee_Records_destination')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow3')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "SourceTable",
+								"type": "DatasetReference"
+							},
+							"name": "SourceTable"
+						},
+						{
+							"dataset": {
+								"referenceName": "DestinationTable",
+								"type": "DatasetReference"
+							},
+							"name": "DestinationTable"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DestinationTable",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"dataset": {
+								"referenceName": "DestinationTable",
+								"type": "DatasetReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "sourceHash"
+						},
+						{
+							"name": "ActiveRecords"
+						},
+						{
+							"name": "TargetHash"
+						},
+						{
+							"name": "ExisitingData"
+						},
+						{
+							"name": "exists1"
+						},
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "alterRow1"
+						},
+						{
+							"name": "derivedColumn2"
+						},
+						{
+							"name": "alterRow2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ID as integer,",
+						"          First_Name as string,",
+						"          Last_Name as string,",
+						"          City as string,",
+						"          Start_Date as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> SourceTable",
+						"source(output(",
+						"          Surrogate_key as integer,",
+						"          ID as integer,",
+						"          First_Name as string,",
+						"          Last_Name as string,",
+						"          City as string,",
+						"          Start_Date as date,",
+						"          End_date as date,",
+						"          Active_flag as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> DestinationTable",
+						"SourceTable select(mapColumn(",
+						"          ID,",
+						"          First_Name,",
+						"          Last_Name,",
+						"          City,",
+						"          Start_Date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 derive(SourceHash = md5(ID,First_Name,City)) ~> sourceHash",
+						"DestinationTable filter(Active_flag == 1) ~> ActiveRecords",
+						"ActiveRecords derive(TargetHash = md5(ID,First_Name,City)) ~> TargetHash",
+						"sourceHash, TargetHash exists(SourceHash == TargetHash,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> ExisitingData",
+						"TargetHash, sourceHash exists(DestinationTable@ID == select1@ID && DestinationTable@First_Name == select1@First_Name,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> exists1",
+						"ExisitingData derive(End_date = toDate('10-10-2022'),",
+						"          Active_flag = 1) ~> derivedColumn1",
+						"derivedColumn1 alterRow(upsertIf(true())) ~> alterRow1",
+						"exists1 derive(End_date = toDate(currentUTC()),",
+						"          Active_flag = 0) ~> derivedColumn2",
+						"derivedColumn2 alterRow(updateIf(true())) ~> alterRow2",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Surrogate_key as integer,",
+						"          ID as integer,",
+						"          First_Name as string,",
+						"          Last_Name as string,",
+						"          City as string,",
+						"          Start_Date as date,",
+						"          End_date as date,",
+						"          Active_flag as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['ID','First_Name','Last_Name','City'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ID,",
+						"          First_Name,",
+						"          Last_Name,",
+						"          City,",
+						"          Start_Date,",
+						"          End_date,",
+						"          Active_flag",
+						"     )) ~> sink1",
+						"alterRow2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Surrogate_key as integer,",
+						"          ID as integer,",
+						"          First_Name as string,",
+						"          Last_Name as string,",
+						"          City as string,",
+						"          Start_Date as date,",
+						"          End_date as date,",
+						"          Active_flag as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Surrogate_key,",
+						"          ID,",
+						"          First_Name,",
+						"          Last_Name,",
+						"          City,",
+						"          Start_Date,",
+						"          End_date,",
+						"          Active_flag",
+						"     )) ~> sink2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceTable')]",
+				"[concat(variables('factoryId'), '/datasets/DestinationTable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "IncrementallyAzureSqlDatabaseSource",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "First_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Last_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "Start_Date",
+						"type": "date"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Source_Table"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseSource')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DestinationTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "IncrementallyAzureSqlDatabaseDestination",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Surrogate_key",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "First_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Last_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "Start_Date",
+						"type": "date"
+					},
+					{
+						"name": "End_date",
+						"type": "date"
+					},
+					{
+						"name": "Active_flag",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "destination_Table"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/IncrementallyAzureSqlDatabaseDestination')]"
+			]
 		}
 	]
 }
