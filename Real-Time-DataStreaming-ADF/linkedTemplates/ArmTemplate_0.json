@@ -1003,13 +1003,7 @@
 					],
 					"transformations": [
 						{
-							"name": "select1"
-						},
-						{
 							"name": "sourceHash"
-						},
-						{
-							"name": "ActiveRecords"
 						},
 						{
 							"name": "TargetHash"
@@ -1022,9 +1016,6 @@
 						},
 						{
 							"name": "derivedColumn1"
-						},
-						{
-							"name": "alterRow1"
 						},
 						{
 							"name": "derivedColumn2"
@@ -1058,31 +1049,21 @@
 						"     validateSchema: false,",
 						"     isolationLevel: 'READ_UNCOMMITTED',",
 						"     format: 'table') ~> DestinationTable",
-						"SourceTable select(mapColumn(",
-						"          ID,",
-						"          First_Name,",
-						"          Last_Name,",
-						"          City,",
-						"          Start_Date",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select1",
-						"select1 derive(SourceHash = md5(ID,First_Name,City)) ~> sourceHash",
-						"DestinationTable filter(Active_flag == 1) ~> ActiveRecords",
-						"ActiveRecords derive(TargetHash = md5(ID,First_Name,City)) ~> TargetHash",
+						"SourceTable derive(SourceHash = md5(First_Name,Last_Name,City)) ~> sourceHash",
+						"DestinationTable derive(TargetHash = md5(First_Name,Last_Name,City)) ~> TargetHash",
 						"sourceHash, TargetHash exists(SourceHash == TargetHash,",
 						"     negate:true,",
 						"     broadcast: 'auto')~> ExisitingData",
-						"TargetHash, sourceHash exists(DestinationTable@ID == select1@ID && DestinationTable@First_Name == select1@First_Name,",
+						"TargetHash, sourceHash exists(DestinationTable@ID == SourceTable@ID",
+						"     && DestinationTable@First_Name == SourceTable@First_Name,",
 						"     negate:false,",
 						"     broadcast: 'auto')~> exists1",
 						"ExisitingData derive(End_date = toDate('10-10-2022'),",
 						"          Active_flag = 1) ~> derivedColumn1",
-						"derivedColumn1 alterRow(upsertIf(true())) ~> alterRow1",
 						"exists1 derive(End_date = toDate(currentUTC()),",
 						"          Active_flag = 0) ~> derivedColumn2",
 						"derivedColumn2 alterRow(updateIf(true())) ~> alterRow2",
-						"alterRow1 sink(allowSchemaDrift: true,",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          Surrogate_key as integer,",
@@ -1095,10 +1076,9 @@
 						"          Active_flag as integer",
 						"     ),",
 						"     deletable:false,",
-						"     insertable:false,",
+						"     insertable:true,",
 						"     updateable:false,",
-						"     upsertable:true,",
-						"     keys:['ID','First_Name','Last_Name','City'],",
+						"     upsertable:false,",
 						"     format: 'table',",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
