@@ -33,6 +33,27 @@
 						"type": "DatasetReference"
 					},
 					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "tbl_employee",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
+				},
+				{
+					"dataset": {
+						"referenceName": "tbl_employee",
+						"type": "DatasetReference"
+					},
+					"name": "sink3"
+				},
+				{
+					"dataset": {
+						"referenceName": "tbl_employee",
+						"type": "DatasetReference"
+					},
+					"name": "sink4"
 				}
 			],
 			"transformations": [
@@ -47,6 +68,21 @@
 				},
 				{
 					"name": "split1"
+				},
+				{
+					"name": "join3"
+				},
+				{
+					"name": "split2"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "alterRow2"
 				}
 			],
 			"scriptLines": [
@@ -93,13 +129,23 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> join1",
-				"join1, destination join(SRC_Emp_Id == destination@Emp_id,",
-				"     joinType:'inner',",
+				"join1, destination join(SRC_Emp_Id == Emp_id,",
+				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> join2",
 				"join2 split(SRC_Emp_Id == Emp_id,",
 				"     disjoint: false) ~> split1@(Match, Unmatched)",
+				"split1@Match, destination join(SRC_Country == destination@Country,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'right')~> join3",
+				"join3 split(SRC_Country == split1@Match@Country,",
+				"     disjoint: false) ~> split2@(match, unmatched)",
+				"split2@match alterRow(updateIf(1 == 1)) ~> alterRow1",
+				"split2@unmatched derive(isActive = 0) ~> derivedColumn1",
+				"derivedColumn1 alterRow(updateIf(split2@unmatched@Emp_id<=Maxkey)) ~> alterRow2",
 				"split1@Unmatched sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -117,7 +163,89 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Emp_id = SRC_Emp_Id,",
+				"          Emp_Name = SRC_Emp_Name,",
+				"          Gender = SRC_Emp_Name,",
+				"          Country = SRC_Country,",
+				"          isActive",
+				"     )) ~> sink1",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Surrogate_key as integer,",
+				"          Emp_id as integer,",
+				"          Emp_Name as string,",
+				"          Gender as string,",
+				"          Country as string,",
+				"          isActive as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['Emp_id'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Emp_id = SRC_Emp_Id,",
+				"          Emp_Name = SRC_Emp_Name,",
+				"          Gender = SRC_Gender,",
+				"          Country = SRC_Country",
+				"     )) ~> sink2",
+				"split2@unmatched sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Surrogate_key as integer,",
+				"          Emp_id as integer,",
+				"          Emp_Name as string,",
+				"          Gender as string,",
+				"          Country as string,",
+				"          isActive as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Emp_id = SRC_Emp_Id,",
+				"          Emp_Name = SRC_Emp_Name,",
+				"          Gender = SRC_Gender,",
+				"          Country = SRC_Country",
+				"     )) ~> sink3",
+				"alterRow2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Surrogate_key as integer,",
+				"          Emp_id as integer,",
+				"          Emp_Name as string,",
+				"          Gender as string,",
+				"          Country as string,",
+				"          isActive as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['Emp_id'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Emp_id = SRC_Emp_Id,",
+				"          Emp_Name = SRC_Emp_Name,",
+				"          Gender = SRC_Gender,",
+				"          Country = SRC_Country,",
+				"          isActive",
+				"     )) ~> sink4"
 			]
 		}
 	}
